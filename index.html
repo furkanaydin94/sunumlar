@@ -224,7 +224,7 @@
             font-weight: 500;
             color: var(--text-secondary);
             margin-bottom: 20px;
-            text-transform: uppercase;
+            /* text-transform: uppercase; */ /* Karakter hatasını önlemek için kaldırıldı */
             letter-spacing: 1px;
         }
         .slide-cover-internal .hizmet-title {
@@ -661,6 +661,22 @@
             border-radius: 0;
         }
 
+        /* --- YENİ EKLENDİ: Görünmez Tıklama Alanları --- */
+        .click-nav {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+            z-index: 5; /* Slaytların üzerinde ama menülerin altında */
+            cursor: pointer; /* Fare imlecini değiştirerek tıklanabilir olduğunu belirtir */
+        }
+        .click-nav.left {
+            left: 0;
+        }
+        .click-nav.right {
+            right: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -708,7 +724,7 @@
         <!-- Slide 3: Bölüm I Başlık -->
         <div class="presentation-slide slide-cover-internal">
             <h2 class="mudurluk-title">BÖLÜM I</h2>
-            <h1 class="hizmet-title">Sistem ve Metodoloji</h1>
+            <h1 class="hizmet-title">SİSTEM VE METODOLOJİ</h1>
             <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
         </div>
 
@@ -1255,7 +1271,7 @@
         <!-- Slide 18: Bölüm IV Başlık (Eski 17) -->
         <div class="presentation-slide slide-cover-internal">
             <h2 class="mudurluk-title">BÖLÜM IV</h2>
-            <h1 class="hizmet-title">Bütçe Analizi ve Gelecek</h1>
+            <h1 class="hizmet-title">BÜTÇE ANALİZİ VE GELECEK</h1>
             <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
         </div>
 
@@ -1616,7 +1632,7 @@
         </div>
 <!-- YENİ EKLENEN SLAYT: Sosyal Hizmetler Şube Müdürlüğü - Başlık -->
 <div class="presentation-slide slide-cover-internal">
-    <h2 class="mudurluk-title">Sosyal Hizmetler Şube Müdürlüğü</h2>
+    <h2 class="mudurluk-title">SOSYAL HİZMETLER ŞUBE MÜDÜRLÜĞÜ</h2>
     <h3 class="hizmet-title">RAMAZAN PLANI</h3>
     <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
 </div>
@@ -1691,7 +1707,7 @@
 
 <!-- YENİ EKLENEN SLAYT: Çocuk Hizmetleri Şube Müdürlüğü -->
 <div class="presentation-slide slide-cover-internal">
-    <h2 class="mudurluk-title">Çocuk Hizmetleri Şube Müdürlüğü</h2>
+    <h2 class="mudurluk-title">ÇOCUK HİZMETLERİ ŞUBE MÜDÜRLÜĞÜ</h2>
     <h3 class="hizmet-title">RAMAZAN PLANI</h3>
     <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
 </div>
@@ -1728,7 +1744,7 @@
 
 <!-- YENİ EKLENEN SLAYT: Engelli Hizmetleri Şube Müdürlüğü -->
 <div class="presentation-slide slide-cover-internal">
-    <h2 class="mudurluk-title">Engelli Hizmetleri Şube Müdürlüğü</h2>
+    <h2 class="mudurluk-title">ENGELLİ HİZMETLERİ ŞUBE MÜDÜRLÜĞÜ</h2>
     <h3 class="hizmet-title">RAMAZAN PLANI</h3>
     <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
 </div>
@@ -1756,7 +1772,7 @@
 
 <!-- YENİ EKLENEN SLAYT: Kadın ve Aile Hizmetleri Şube Müdürlüğü -->
 <div class="presentation-slide slide-cover-internal">
-    <h2 class="mudurluk-title">Kadın ve Aile Hizmetleri Şube Müdürlüğü</h2>
+    <h2 class="mudurluk-title">KADIN VE AİLE HİZMETLERİ ŞUBE MÜDÜRLÜĞÜ</h2>
     <h3 class="hizmet-title">RAMAZAN PLANI</h3>
     <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
 </div>
@@ -1787,7 +1803,7 @@
 
 <!-- YENİ EKLENEN SLAYT: Şehit Yakınları ve Gazilerle İlişkiler Müdürlüğü -->
 <div class="presentation-slide slide-cover-internal">
-    <h2 class="mudurluk-title">Şehit Yakınları ve Gazilerle İlişkiler Müdürlüğü</h2>
+    <h2 class="mudurluk-title">ŞEHİT YAKINLARI VE GAZİLERLE İLİŞKİLER MÜDÜRLÜĞÜ</h2>
     <h3 class="hizmet-title">RAMAZAN PLANI</h3>
     <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
 </div>
@@ -1836,6 +1852,10 @@
             <button id="next-btn" title="Sonraki Slayt"><i class="fa-solid fa-arrow-right"></i></button>
         </div>
 
+        <!-- YENİ EKLENDİ: Görünmez Tıklama Alanları -->
+        <div class="click-nav left"></div>
+        <div class="click-nav right"></div>
+
     </div>
 
     <script>
@@ -1844,7 +1864,7 @@
             let currentSlideIndex = 0;
             const totalSlides = slides.length;
             const slideCounterElement = document.getElementById('slide-counter');
-            const presentationContainer = document.getElementById('presentation-container'); // Moved up for broader scope
+            const presentationContainer = document.getElementById('presentation-container');
 
             function showSlide(index) {
                 if (index < 0) index = 0;
@@ -1879,6 +1899,22 @@
                     toggleFullScreen();
                 }
             });
+            
+            // YENİ EKLENDİ: Tıklama ile Navigasyon
+            const navLeft = document.querySelector('.click-nav.left');
+            const navRight = document.querySelector('.click-nav.right');
+
+            navLeft.addEventListener('click', () => {
+                if (currentSlideIndex > 0) {
+                    showSlide(currentSlideIndex - 1);
+                }
+            });
+
+            navRight.addEventListener('click', () => {
+                if (currentSlideIndex < totalSlides - 1) {
+                    showSlide(currentSlideIndex + 1);
+                }
+            });
 
             showSlide(0);
 
@@ -1889,10 +1925,9 @@
             const fullscreenBtn = document.getElementById('context-fullscreen');
             const loadingIndicator = document.getElementById('pdf-loading-indicator');
 
-            // Tam Ekran Fonksiyonları (YENİ)
+            // Tam Ekran Fonksiyonları
             function toggleFullScreen() {
                 if (!document.fullscreenElement) {
-                    // Sunum konteynerini tam ekran yap
                     presentationContainer.requestFullscreen();
                 } else if (document.exitFullscreen) {
                     document.exitFullscreen();
@@ -1942,10 +1977,6 @@
                 const loadingTextElement = loadingIndicator.querySelector('span');
                 loadingIndicator.style.display = 'block';
                 
-                // FONT SORUNU İÇİN GEÇİCİ DEĞİŞİKLİK
-                const originalFont = document.body.style.fontFamily;
-                document.body.style.fontFamily = 'Arial, sans-serif';
-                
                 const w = presentationContainer.offsetWidth;
                 const h = presentationContainer.offsetHeight;
                 const orientation = w > h ? 'l' : 'p';
@@ -1959,44 +1990,28 @@
                         }
 
                         showSlide(i);
-                        await new Promise(resolve => setTimeout(resolve, 500)); // Bekleme süresi biraz artırıldı
+                        await new Promise(resolve => setTimeout(resolve, 500));
 
                         const canvas = await html2canvas(presentationContainer, {
-                            scale: 1, // Kalite ilk haline döndürüldü
+                            scale: 2, // Kalite artırıldı
                             useCORS: true,
                             width: w,
                             height: h,
                             windowWidth: w,
                             windowHeight: h,
                             x: 0,
-                            y: 0,
-                            onclone: (clonedDoc) => {
-                                // Klonlanan dokümanda da fontu Arial yap
-                                clonedDoc.body.style.fontFamily = 'Arial, sans-serif';
-                                Array.from(clonedDoc.querySelectorAll('svg')).forEach(svg => {
-                                    try {
-                                        const svgRect = svg.getBoundingClientRect();
-                                        svg.setAttribute('width', svgRect.width);
-                                        svg.setAttribute('height', svgRect.height);
-                                        svg.innerHTML = svg.innerHTML;
-                                    } catch (e) {
-                                        console.warn("SVG yeniden çizilirken hata:", e, svg);
-                                    }
-                                });
-                            }
+                            y: 0
                         });
 
-                        const imgData = canvas.toDataURL('image/jpeg', 0.9); // Kalite ilk haline döndürüldü
+                        const imgData = canvas.toDataURL('image/jpeg', 1.0); // Maksimum JPEG kalitesi
                         if (i > 0) pdf.addPage([w, h], orientation);
                         pdf.addImage(imgData, 'JPEG', 0, 0, w, h);
                     }
-                    pdf.save('İBB_Sunum.pdf'); // Dosya adı ilk haline döndürüldü
+                    pdf.save('İBB_Sunum_Yuksek_Kalite.pdf');
                 } catch (err) {
-                    alert('PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol edin.');
+                    alert('PDF oluşturulurken bir hata oluştu: ' + err.message);
                     console.error("PDF Oluşturma Hatası:", err);
                 } finally {
-                    // FONTU GERİ YÜKLE
-                    document.body.style.fontFamily = originalFont;
                     showSlide(originalSlideIndex);
                     loadingIndicator.style.display = 'none';
                 }

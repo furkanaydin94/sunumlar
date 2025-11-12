@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İBB Sosyal Hizmetler Sunumu</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap&subset=latin-ext" rel="stylesheet">
+    <!-- Font Awesome (İkonlar için) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- YENİ EKLENDİ: PDF Kütüphaneleri -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* --- 1. TEMEL SUNUM KURULUMU --- */
+        :root {
+            --ibb-dark-blue: #1E214F;
+            --ibb-light-blue: #3A6EA5;
+            --text-primary: #1E214F;
+            --text-secondary: #5a647e;
+            --background-body: #F0F2F5; /* Dış arka plan */
+            --background-slide: #FFFFFF; /* Slayt iç arka planı */
+            --border-color: #e9ecef;
+            --gradient-bg: linear-gradient(110deg, var(--ibb-dark-blue) 0%, var(--ibb-light-blue) 100%);
+            --text-success: #28a745;
+            --text-danger: #e53e3e; /* Bu renk hala mevcut ancak travma ikonunda kullanılmayacak */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--background-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            overflow: hidden; /* Sayfanın kaymasını engelle */
+        }
+
+        /* --- 2. SLAYT ANA KONTEYNERİ (16:9 Oran) --- */
+        #presentation-container {
+            width: 1280px;
+            height: 720px;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--background-slide);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .presentation-slide {
+            width: 100%;
+            height: 100%;
+            display: none; /* JS ile 'flex' veya 'grid' olarak değiştirilecek */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .presentation-slide.active-slide {
+            display: flex;
+            opacity: 1;
+            z-index: 2;
+        }
+
+        /* Kapak ve Bölüm Başlıkları için özel grid */
+        .presentation-slide.slide-cover-internal,
+        #cover-slide {
+            display: none; /* Varsayılan */
+            align-items: center;
+        }
+        .presentation-slide.slide-cover-internal.active-slide,
+        #cover-slide.active-slide {
+            display: grid; /* flex yerine grid */
+            place-content: center;
+            opacity: 1;
+            z-index: 2;
+        }
+                
+        /* --- 3. SABİT SUNUM ELEMENTLERİ (Logo, Navigasyon) --- */
+                
+        /* Her slaytın sol alt köşesindeki logo */
+        .slide-logo {
+            position: absolute;
+            bottom: 30px;
+            left: 60px;
+            height: 60px; /* Logo boyutu */
+            z-index: 3;
+            opacity: 0.8;
+        }
+                
+        /* Kapak slaytında logo olmaz */
+        #cover-slide .slide-logo {
+            display: none;
+        }
+
+        /* Navigasyon Okları ve Sayaç */
+        #slide-navigation {
+            /* GÜNCELLENDİ: Navigasyon okları kaldırıldı */
+            display: none;  
+            
+            position: absolute;
+            bottom: 30px;
+            right: 60px;
+            z-index: 10;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #slide-navigation button {
+            background-color: var(--ibb-dark-blue);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        #slide-navigation button:hover {
+            background-color: var(--ibb-light-blue);
+        }
+                
+        #slide-navigation button:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        #slide-counter {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 40px;
+            text-align: center;
+        }
+                
+        /* Kapak slaytında navigasyon olmaz */
+        #cover-slide #slide-navigation {
+            display: none;
+        }
+
+        /* --- 4. SLAYT İÇERİK TİPOGRAFİSİ --- */
+
+        /* Ana Slayt Başlığı (Her slaytın üstünde) */
+        .slide-title {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--ibb-dark-blue);
+            position: absolute;
+            top: 60px;
+            left: 60px;
+            width: calc(100% - 120px);
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+                
+        /* Slaytın ana içerik alanı (başlığın altı) */
+        .content-area {
+            width: 100%;
+            flex-grow: 1;
+            margin-top: 80px; /* Başlık için boşluk */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- 5. ÖZEL SLAYT MİZANPAJLARI --- */
+
+        /* 5.1. Kapak Slaytı */
+        #cover-slide {
+            background: var(--gradient-bg);
+            color: white;
+            text-align: center;
+        }
+        #cover-slide img {
+            height: 120px;
+            margin-bottom: 2rem;
+            filter: brightness(0) invert(1);
+            justify-self: center;
+        }
+        #cover-slide h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: white;
+            max-width: 800px;
+        }
+        #cover-slide h2 {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 900px;
+        }
+
+        /* 5.2. Bölüm Başlığı Slaytı */
+        .slide-cover-internal {
+            text-align: center;
+        }
+        .slide-cover-internal .mudurluk-title {
+            font-size: 1.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .slide-cover-internal .hizmet-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--ibb-dark-blue);
+        }
+
+        /* 5.3. İçerik Kutuları (Box) */
+        .content-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%; }
+        /* GÜNCELLENDİ: Hizmet kartları için boşluk azaltıldı */
+        .content-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; width: 100%; }
+.content-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; width: 100%; }
+
+        .content-grid-4 .box {
+            padding: 15px;
+        }
+        .content-grid-4 .box h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+        .content-grid-4 .box p, .content-grid-4 .box li {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .content-grid-4 .box ul {
+            margin-top: 10px;
+        }
+/* YENİ EKLENDİ: 5'li özel grid */
+        .content-grid-5-special {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+            width: 100%;
+            padding: 0 40px; /* Kenarlardan biraz boşluk */
+        }
+        .content-grid-5-special .box {
+            grid-column: span 2;
+        }
+        .content-grid-5-special .box:nth-child(4) {
+            grid-column: 2 / span 2;
+        }
+        .content-grid-5-special .box:nth-child(5) {
+            grid-column: 4 / span 2;
+        }
+
+        .box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            height: 100%;
+            display: flex;  
+            flex-direction: column;  
+        }
+        .box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ibb-light-blue);
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .box p, .box li {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        .box ul {
+            padding-left: 20px;
+            margin-top: 15px;
+        }
+        .box li {
+            margin-bottom: 10px;
+        }
+        .box li strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+        /* YENİ EKLENDİ: Kutu içindeki iç listeler için stil */
+        .box ul ul {
+             margin-top: 8px;
+             margin-bottom: 8px;
+        }
+        .box ul ul li {
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        /* 5.4. İkonlu Kartlar (Breakdown) - GÜNCELLENDİ: Sığması için küçültüldü */
+        .breakdown-card {  
+             background-color: var(--background-slide);  
+             border: 1px solid var(--border-color);  
+             border-radius: 12px;  
+             padding: 12px; /* Küçültüldü */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            display: flex;  
+             flex-direction: column;  
+             align-items: center;  
+             text-align: center;  
+             height: 100%;
+        }
+        .breakdown-card .card-icon {
+            font-size: 2.5rem; /* Küçültüldü */
+            color: var(--ibb-light-blue);
+            margin-bottom: 0.75rem; /* Küçültüldü */
+            height: 40px; /* Küçültüldü */
+        }
+        .breakdown-card h3 {  
+             font-size: 14px; /* Küçültüldü */
+            color: var(--text-primary);  
+             margin-bottom: 5px; /* Küçültüldü */
+            font-weight: 700;  
+             flex-grow: 1;  
+        }
+        .breakdown-card .card-value {
+            font-size: 18px; /* Küçültüldü */
+            font-weight: 700;
+            color: var(--ibb-dark-blue);
+            word-break: break-all;
+            margin-bottom: 3px; /* Küçültüldü */
+        }
+        .breakdown-card .card-label {
+            font-size: 12px; /* Küçültüldü */
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+                
+        /* 5.5. Şık Liste */
+        .styled-list { list-style: none; padding-left: 0; width: 100%; max-width: 900px; }
+        .styled-list li {  
+             position: relative;  
+             padding-left: 40px;  
+             margin-bottom: 20px;  
+             line-height: 1.6;  
+             font-size: 18px;  
+        }
+        .styled-list li::before {
+            content: '\f00c'; /* Font Awesome Check */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute; left: 0; top: 0;
+            color: var(--text-success);  
+             font-size: 18px;  
+            line-height: 1.6;
+        }
+        .styled-list li.item-users::before {
+            content: '\f0c0'; /* fa-users */
+            color: var(--ibb-light-blue);
+        }
+        .styled-list li.item-idcard::before {
+            content: '\f2c2'; /* fa-id-card */
+            color: var(--ibb-light-blue);
+        }
+        .styled-list li.item-secret::before {
+            content: '\f21b'; /* fa-user-secret */
+            color: var(--ibb-light-blue);
+        }
+        .styled-list li.item-shoes::before {
+            content: '\f54b'; /* fa-shoe-prints */
+            color: var(--ibb-light-blue);
+        }
+        /* GÜNCELLENDİ: İkon ve renk değiştirildi */
+        .styled-list li.item-trauma::before {
+            content: '\f5dc'; /* fa-brain */
+            color: var(--ibb-light-blue); /* Kırmızıdan maviye değiştirildi */
+        }
+
+        .styled-list li strong { color: var(--text-primary); font-weight: 700; }
+        .styled-list p { font-size: 16px; color: var(--text-secondary); margin-top: 4px; }
+
+
+        /* 5.6. KODLANMIŞ İŞ AKIŞ DİYAGRAMI (Timeline) */
+        .timeline-layout {
+            align-items: stretch;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            width: 100%;
+            gap: 15px;  
+        }
+        .timeline-item {
+            position: relative;
+            text-align: left;
+            flex: 1;  
+            background-color: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-top: 5px solid var(--ibb-light-blue);
+        }
+        .timeline-item .icon {
+            font-size: 28px;
+            color: var(--ibb-light-blue);
+            margin-bottom: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e0f2fe;  
+       }
+        .timeline-item h3 {
+            color: var(--ibb-dark-blue);
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .timeline-item p, .timeline-item li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }  
+         .timeline-item ul {
+            padding-left: 18px;
+            margin-top: 10px;  
+         }  
+         .timeline-item li {
+            margin-bottom: 5px;  
+         }  
+         .timeline-item strong {
+            color: var(--text-primary);  
+         }
+        /* Renk Kodlaması */
+        .timeline-item:nth-child(1) { border-top-color: #005f73; }
+        .timeline-item:nth-child(2) { border-top-color: #0a9396; }
+        .timeline-item:nth-child(3) { border-top-color: #94d2bd; }
+        .timeline-item:nth-child(4) { border-top-color: #e9d8a6; }
+        .timeline-item:nth-child(5) { border-top-color: #ee9b00; }
+        /* Oklar */
+        .timeline-layout-wrapper { position: relative; width: 100%; }
+        .flow-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #dee2e6; /* Ok rengi daha belirgin yapıldı */
+        }
+        .flow-arrow.arrow-1 { left: 19%; }
+        .flow-arrow.arrow-2 { left: 39%; }
+        .flow-arrow.arrow-3 { left: 59%; }
+        .flow-arrow.arrow-4 { left: 79%; }
+                
+        /* 5.7. KODLANMIŞ HALKA GRAFİK (SVG) */
+        .doughnut-chart-container {
+            align-items: center;
+            display: flex;
+            gap: 60px;
+            justify-content: center;
+            width: 100%;
+        }
+        .doughnut-chart-svg {
+            width: 350px;
+            height: 350px;
+            transform: rotate(-90deg); /* 12'den başla */
+        }
+        .doughnut-segment {
+            fill: none;
+            stroke-width: 60;
+            transition: all 0.5s ease;
+        }
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .legend li {
+            align-items: center;
+            color: var(--text-primary);
+            display: flex;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .legend .color-box {
+            border-radius: 4px;
+            height: 22px;
+            margin-right: 15px;
+            width: 22px;
+        }
+        .chart-summary {
+            font-size: 16px;
+            font-style: italic;
+            margin-top: 30px;
+            max-width: 90%;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* 5.8. KODLANMIŞ ÇİZGİ GRAFİK (SVG) - GÜNCELLENDİ */
+        .line-chart-container {
+            width: 100%;
+            max-width: 900px; /* Grafiği ortalamak için */
+            margin: 0 auto;
+        }
+        .line-chart-svg {
+            width: 100%;
+            height: auto;
+            overflow: visible; /* Etiketlerin görünmesi için */
+        }
+        .chart-axis {
+            stroke: var(--border-color);
+            stroke-width: 2;
+        }
+        .chart-grid {
+            stroke: var(--border-color);
+            stroke-width: 1;
+            stroke-dasharray: 3 3;
+            opacity: 0.7;
+        }
+        .chart-line {
+            fill: none;
+            stroke: var(--ibb-light-blue);
+            stroke-width: 4;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        .chart-point {
+            fill: var(--ibb-dark-blue);
+            stroke: white;
+            stroke-width: 2;
+        }
+        .chart-label-x {
+            font-size: 16px;
+            font-weight: 600;
+            fill: var(--text-secondary);
+            text-anchor: middle;
+        }
+        .chart-label-y {
+            font-size: 14px;
+            fill: var(--text-secondary);
+            text-anchor: end;
+        }
+        .chart-data-label {
+            font-size: 15px;
+            font-weight: 700;
+            fill: var(--ibb-dark-blue);
+            text-anchor: middle;
+        }
+                
+        /* 5.9. TABLO */
+        .table-layout {
+            width: 100%;
+        }
+        .table-layout table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 16px;
+        }
+        .table-layout th,
+        .table-layout td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px; /* Tablo fontu küçültüldü */
+        }
+        .table-layout th {
+            background-color: #f8fafc;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .table-layout td:not(:first-child),
+        .table-layout th:not(:first-child) {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .table-layout tr:last-child td { border-bottom: none; }
+        .table-layout .highlight-row { font-weight: 700; color: var(--text-primary); }
+        .table-layout .highlight-subtotal { background-color: #f8fafc; font-weight: 700; }
+        .table-layout .highlight-total { background-color: #f1f3f5; font-weight: 800; color: var(--ibb-dark-blue); }
+
+        /* 5.10. Kapanış Slaytı */
+        .qa-layout { text-align: center; }
+        .qa-layout h2 { font-size: 80px; margin-bottom: 20px; color: var(--ibb-dark-blue); }
+        .qa-layout p { font-size: 24px; color: var(--text-secondary); }
+
+        /* YENİ EKLENDİ: PDF İndirme Menüsü */
+        #custom-context-menu {
+            position: fixed;
+            z-index: 10000;
+            background-color: var(--background-slide);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.5rem 0;
+            min-width: 200px;
+            display: none; /* JS ile yönetilecek */
+        }
+        .context-menu-item {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .context-menu-item:hover {
+            background-color: var(--background-body);
+        }
+        #pdf-loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--background-slide);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            z-index: 10001;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: none; /* JS ile yönetilecek */
+            text-align: center;
+        }
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- YENİ EKLENDİ: Tam Ekran Stilleri --- */
+        #presentation-container:fullscreen,
+        #presentation-container:-webkit-full-screen,
+        #presentation-container:-moz-full-screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="presentation-container">
+
+        <!-- Slide 1: Kapak Slaytı -->
+        <div id="cover-slide" class="presentation-slide active-slide">
+            <img src="https://i.imgur.com/UUOeqIx.png" alt="İBB Logo">
+            <h1>İBB Sosyal Hizmetler Şube Müdürlüğü</h1>
+            <h2>Hizmet Metodolojisi ve Stratejik Planlama</h2>
+            <!-- Kapakta logo veya navigasyon yok -->
+        </div>
+
+        <!-- Slide 2: Özet (Yeni Diyagram) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Sunum Akışı: Beş Temel Alan</h2>
+            <div class="content-area">
+                <div class="content-grid-5-special">
+                    <div class="box">
+                        <h3 style="color: #005f73;"><i class="fa-solid fa-sitemap"></i> BÖLÜM I: SİSTEM VE METODOLOJİ</h3>
+                        <p>Hizmetleri nasıl verdiğimiz, profesyonel kadromuz, objektif kriterlerimiz ve denetlenebilir iş akışlarımız.</p>
+                    </div>
+                    <div class="box">
+                        <h3 style="color: #0a9396;"><i class="fa-solid fa-shield-halved"></i> BÖLÜM II: STANDARTLAR VE VAKA YÖNETİMİ</h3>
+                        <p>Hizmet sunumundaki etik kurallarımız ve haneleri bütüncül bir yaklaşımla (istihdam, sağlık vb.) nasıl ele aldığımız.</p>
+                    </div>
+                    <div class="box">
+                        <h3 style="color: #94d2bd;"><i class="fa-solid fa-briefcase"></i> BÖLÜM III: HİZMETLER</h3>
+                        <p>Temel hizmetlerin kümülatif (2019-2025) dökümü ve verileri.</p>
+                    </div>
+                    <div class="box">
+                        <h3 style="color: #e9d8a6;"><i class="fa-solid fa-chart-line"></i> BÖLÜM IV: BÜTÇE ANALİZİ VE GELECEK</h3>
+                        <p>Operasyonun bütçe gelişimi ve 2026 yılı stratejik hedefleri.</p>
+                    </div>
+                    <div class="box">
+                        <h3 style="color: #ee9b00;"><i class="fa-solid fa-moon"></i> BÖLÜM V: RAMAZAN PLANI</h3>
+                        <p>Ramazan ayına özel olarak planlanan hizmet ve desteklerin detayı.</p>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 3: Bölüm I Başlık -->
+        <div class="presentation-slide slide-cover-internal">
+            <h2 class="mudurluk-title">BÖLÜM I</h2>
+            <h1 class="hizmet-title">Sistem ve Metodoloji</h1>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 4: HTML/CSS İş Akış Diyagramı -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Uçtan Uca Hizmet Modeli</h2>
+            <div class="content-area timeline-layout-wrapper">
+                <div class="timeline-layout">
+                    
+                    <div class="timeline-item">
+                        <div class="icon" style="background-color: #e6f7ff; color: #005f73;"><i class="fa-solid fa-laptop-file"></i></div>
+                        <h3>1. Başvuru & Ön Tespit</h3>
+                        <ul>
+                            <li>Alo 153 Çağrı Merkezi</li>
+                            <li>İstanbul Senin</li>
+                            <li>sosyalyardim.ibb.gov.tr</li>
+                        </ul>
+                        <!-- GÜNCELLENDİ: Çıktı satırı silindi -->
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="icon" style="background-color: #e6fffa; color: #0a9396;"><i class="fa-solid fa-user-check"></i></div>
+                        <h3>2. Sosyal İnceleme (SİR)</h3>
+                        <p>Profesyonel kadro (SHU, Sosyolog, Psikolog, PDR) ile hane ziyareti.</p>
+                        <ul>
+                            <li>Puana Göre</li>
+                            <li>Başvuru Tarihine Göre</li>
+                            <li>Adrese Göre</li>
+                        </ul>
+                        <!-- GÜNCELLENDİ: Çıktı satırı silindi -->
+                    </div>
+
+                    <div class="timeline-item">  
+                         <div class="icon" style="background-color: #f0fdfa; color: #94d2bd;"><i class="fa-solid fa-file-shield"></i></div>
+                        <h3>3. Evrak Kontrolü</h3>
+                        <p>SİR'deki beyanlar, e-belediye sistemi üzerinden resmi kayıtlarla doğrulanır:</p>
+                        <ul>
+                            <li>İkametgah</li>
+                            <li>Tapu</li>
+                            <li>Gib(Esnaf Bilgisi)</li>
+                            <li>İşsizlik Maaşı</li>
+                            <li>SGK Bilgisi</li>
+                            <li>Sosyal Yardım(Engelli Maaşı)</li>
+                            <li>Araç Kaydı</li>
+                        </ul>
+                        <!-- GÜNCELLENDİ: Çıktı satırı silindi -->
+                    </div>
+
+                    <div class="timeline-item">  
+                         <div class="icon" style="background-color: #fefcf5; color: #e9d8a6;"><i class="fa-solid fa-tasks"></i></div>
+                        <h3>4. Destek Planlaması</h3>
+                        <p>Başvurusu olumlu sonuçlanan yurttaşların ihtiyaçları göz önüne alınarak uygun hizmet müdahaleleri planlanır.</p>
+                        <p style="margin-top: auto; padding-top: 10px;"><strong>Onay:</strong> Tüm nihai kararlar 5 kişilik <strong>Değerlendirme Kurulu</strong> onayı ile verilir.</p>
+                    </div>
+
+                     <div class="timeline-item">  
+                         <div class="icon" style="background-color: #fffbeb; color: #ee9b00;"><i class="fa-solid fa-folder-open"></i></div>
+                        <h3>5. Vaka Yönetimi</h3>
+                        <p>Tespit edilen ancak nakdi destek dışındaki ihtiyaçlar için ilgili birimlere yönlendirme yapılır:</p>
+                          <ul>
+                             <li>İSMEK, BİO, PDM vb.</li>
+                             <li>Yasal Bildirimler</li>
+                         </ul>  
+                         <!-- GÜNCELLENDİ: Çıktı satırı silindi -->
+                    </div>
+                </div>
+                <!-- Oklar -->
+                <div class="flow-arrow arrow-1"><i class="fa-solid fa-caret-right"></i></div>
+                <div class="flow-arrow arrow-2"><i class="fa-solid fa-caret-right"></i></div>
+                <div class="flow-arrow arrow-3"><i class="fa-solid fa-caret-right"></i></div>
+                <div class="flow-arrow arrow-4"><i class="fa-solid fa-caret-right"></i></div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- GÜNCELLENDİ: Slayt 5 (Objektif Kriterler İstanbulkart) SİLİNDİ -->
+
+        <!-- YENİ SLAYT 5 EKLENDİ -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Stratejik Dönüşüm ve Temel Kriterler</h2>
+            <div class="content-area">
+                <div class="content-grid-2">
+                    <div class="box">
+                        <h3 style="color: var(--ibb-dark-blue);"><i class="fa-solid fa-sync-alt"></i> 1. Stratejik Dönüşüm (2022)</h3>
+                        <p><strong>Stratejik Devrim: "Açlık" Değil, "Muhtaçlık" Esası</strong></p>
+                        <ul>
+                            <li><strong>2022 Öncesi:</strong> Değerlendirme "Açlık Sınırı" ölçütüne göre yapılıyordu. (2025 Açlık Sınırı: ₺2.724)</li>
+                            <li><strong>2022 Sonrası:</strong> Değerlendirme tamamen "Muhtaçlık Sınırı" (Gelir Temelli) üzerinden yapılmaya başlandı. (2025 Muhtaçlık Sınırı: ₺7.369)</li>
+                        </ul>
+                        <p style="margin-top: 10px; font-size: 14px; font-style: italic; color: var(--text-primary);">
+                            <strong>Not:</strong> Sedep üzerinden yapılan sosyal incelemelerde 2022 Temmuz ayı itibari ile olumlu değerlendirme gelir kriteri açlık sınırından muhtaçlık sınırına geçmiştir. Açlık sınırı üzerinden yapılan değerlendirme sonucu %34 olan olumlu değerlendirme oranı muhtaçlık sınırı olduğunda %52 olmuştur.
+                        </p>
+                        <p style="margin-top: 10px;">
+                            <strong>Stratejik Sonuç (Kapsam Genişlemesi):</strong>
+                            Bu değişiklikle kriterler, hanelerin gerçek durumuna duyarlı hale getirildi ve onaylı müracaat sayısı 313.000'e ulaştı.
+                        </p>
+                    </div>
+                    <div class="box">
+                        <h3><i class="fa-solid fa-clipboard-check"></i> 2. 2025 Değerlendirme Kriterleri (Aşama 1)</h3>
+                        <p>Ön şartlar:</p>
+                        <ul>
+                            <li><strong>Gelir Kriteri:</strong> Kişi başı gelirin, asgari ücretin 1/3'ünden (yani Muhtaçlık Sınırı olan ₺7.369'dan) az olması.</li>
+                            <li><strong>Varlık Kriterleri:</strong>
+                                <ul>
+                                    <li>Konut</li>
+                                    <li>Araç</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+        
+        <!-- YENİ SLAYT 6 EKLENDİ -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">İstanbul'da Güçlü Dayanışma: Vizyon ve Kapsam</h2>
+            <div class="content-area">
+                <div class="content-grid-3">
+                    <div class="box">
+                        <h3 style="color: var(--ibb-dark-blue);"><i class="fa-solid fa-bullseye"></i> 1. Vizyon ve Temel Amaç</h3>
+                        <ul>
+                            <li><strong>Vizyon:</strong> İstanbul’da hiçbir hanenin temel ihtiyaçlara erişimde geri kalmamasını sağlamak.</li>
+                            <li><strong>Temel Amaç:</strong> Yalnızca maddi destek ulaştırmak değil, onurlu bir yaşamı ve sürdürülebilir sosyal adaleti güvence altına almak.</li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3><i class="fa-solid fa-chart-line"></i> 2. 6 Yıllık Gelişim (2019-2025)</h3>
+                        <ul>
+                            <li><strong>Destek Tutarı (Alım Gücünü Koruma):</strong>
+                                <ul>
+                                    <li>2019: 100 TL / 150 TL / 200 TL</li>
+                                    <li>2025: 1.500 TL (Enflasyonist koşullara göre)</li>
+                                    <li>2026 Hedefi: 2.000 TL</li>
+                                </ul>
+                            </li>
+                            <li><strong>Kapsamdaki Artış (Onaylı Hane):</strong>
+                                <ul>
+                                    <li>2019: 175.000 Hane</li>
+                                    <li>2025: 313.000 Hane</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3><i class="fa-solid fa-map-marked-alt"></i> 3. Güncel Destek Dağılımı (2025)</h3>
+                        <ul>
+                            <li><strong>Aktif Düzenli Destek Alan Haneler:</strong>
+                                <ul>
+                                    <li>İstanbul Sosyal Destek Kartı: 165.000</li>
+                                    <li>Halk Süt Desteği: 84.000 (100.969 çocuk)</li>
+                                    <li>Okul Beslenme Desteği: 15.000</li>
+                                </ul>
+                            </li>
+                            <li>(Not: 30 bin hane hem kart hem süt desteği almaktadır)</li>
+                            <li><strong>Mevcut Durum:</strong> 79.000 olumlu hane yıl içerisinde çeşitli desteklerden faydalanacaktır.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- YENİ SLAYT 7 EKLENDİ -->
+        
+        <!-- Slide 8: Personel Kapasitesi (Eski 6) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Aşama 2: Kadro ve Operasyonel Kapasite</h2>
+            <div class="content-area">
+                <div class="content-grid-3">
+                    <div class="breakdown-card">
+                        <div class="card-icon"><i class="fa-solid fa-person-walking"></i></div>
+                        <h3>196 Saha Personeli</h3>
+                        <div class="card-value">1000</div>
+                        <div class="card-label">Günlük Ortalama Saha İncelemesi</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <div class="card-icon"><i class="fa-solid fa-phone-volume"></i></div>
+                        <h3>80 Arama Personeli</h3>
+                        <div class="card-value">1100</div>
+                        <div class="card-label">Günlük Ortalama Arama İncelemesi</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <div class="card-icon"><i class="fa-solid fa-file-circle-check"></i></div>
+                        <h3>67 Evrak Kontrol Personeli</h3>
+                        <div class="card-value">1800</div>
+                        <div class="card-label">Günlük Ortalama Evrak Kontrol İşlemi</div>
+                    </div>
+                </div>  
+                <!-- GÜNCELLENDİ: Görevlendirme notu paragrafı silindi -->
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 9: SİR Detayları (Eski 7) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Aşama 2: Sosyal İnceleme Raporu (SİR) Detayları</h2>
+            <div class="content-area">
+                <div class="content-grid-3">
+                    <div class="box">
+                        <h3><i class="fa-solid fa-users"></i> Hane ve Eğitim</h3>
+                        <ul>
+                            <li>Hane Öyküsü</li>
+                            <li>Sosyoekonomik Durum</li>
+                            <li>Çalışmama Nedeni (Sağlık, Çocuk Bakımı, İş Arayışı vb.)</li>
+                            <li>Hane Halkının Eğitim Düzeyi</li>
+                            <li>Okul Çağı Çocuklarının Takibi</li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3><i class="fa-solid fa-coins"></i> Ekonomik Durum</h3>  
+                         <ul>
+                            <li>Toplam Aylık Gelir (Maaş, Nafaka vb.)</li>
+                            <li>Temel Gider Kalemleri (Kira, Fatura)</li>
+                            <li>Mevcut Sosyal Destekler</li>
+                            <li>Borç Durumu ve Nedeni</li>
+                            <li>Geçim Stratejisi (Gelir Yoksa)</li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3><i class="fa-solid fa-house-medical"></i> Barınma ve Sağlık</h3>
+                        <ul>
+                            <li>Konutun Mülkiyet Durumu</li>
+                            <li>Konutun Fiziki Koşulları (Isınma, Eşya)</li>
+                            <li>Kronik Hastalık / Engel Durumu</li>
+                            <li>Engel Türü (Tam/Kısmi Bağımlı)</li>
+                            <li>Sabıka ve Bağımlılık Durumu</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 10: Bölüm II Başlık (Eski 8) -->
+        <div class="presentation-slide slide-cover-internal">
+            <h2 class="mudurluk-title">BÖLÜM II</h2>
+            <h1 class="hizmet-title">STANDARTLAR VE VAKA YÖNETİMİ</h1>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 11: Görüşme Etiği (Eski 9) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Mesleki Standart: Görüşme Etiği</h2>
+            <div class="content-area">
+                <div class="styled-list">
+                    <ul>
+                        <li class="item-users">
+                            <div>
+                                <strong>Çift Uzman Prensibi:</strong> Ziyaretler, <strong>güvenlik</strong> ve <strong>objektiflik</strong> sağlamak amacıyla iki profesyonel personel ile gerçekleştirilir. Bu, bireysel kararların önüne geçer ve denetlenebilir bir hizmet sunar.
+                            </div>
+                        </li>
+                        <li class="item-idcard">
+                            <div>
+                                <strong>Kurumsal Kimlik:</strong> Personel, haneye geliş nedenini (sosyal destek talebi değerlendirmesi) açık bir dille ifade etmelidir.
+                            </div>
+                        </li>
+                        <li class="item-secret">
+                            <div>
+                                <strong>Gizlilik İlkesi:</strong> Sosyal çevreden (komşu, esnaf) haneye ait özel bilgi alınmaz ve bu kişilerle hanenin durumu paylaşılmaz.
+                            </div>
+                        </li>  
+                         <li class="item-shoes">
+                            <div>
+                                <strong>Haneye Saygı:</strong> Personel hanenin kültürüne uygun bir şekilde tavır ve davranışlarına yön verir.
+                            </div>
+                        </li>
+                        <!-- GÜNCELLENDİ: İkon sınıfı (item-trauma) korundu, ancak CSS'i değiştirildi -->
+                        <li class="item-trauma">
+                            <div>
+                                <strong>Travma Odaklı Yaklaşım (Zarar Vermeme):</strong> "Müdahale edilemeyecek (geçmiş travmalar, kayıplar vb.) durumların tekrar tekrar anlattırılarak yeniden travmatize edilmemesi gerekir."
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- GÜNCELLENDİ: Slayt 12 (Eski 10) - Yönlendirmeler düzenlendi -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Aşama 4: Bütüncül Müdahale (Yönlendirmeler)</h2>
+            <div class="content-area">
+                 <div class="content-grid-3">
+                    <div class="box">
+                        <h3><i class="fa-solid fa-briefcase"></i> İstihdam ve Eğitim</h3>
+                        <p>Tespit edilen istihdam veya mesleki yeterlilik ihtiyacına göre yönlendirme yapılır:</p>
+                        <ul>
+                            <li><strong>BÖLGESEL İSTİHDAM OFİSLERİ (BİO)</strong></li>
+                            <li><strong>İSMEK</strong> (Meslek Edindirme Kursları)</li>
+                        </ul>
+                    </div>
+                     <div class="box">
+                        <h3 style="color: var(--ibb-dark-blue);"><i class="fa-solid fa-brain"></i> Psikososyal Destek</h3>
+                        <p>Psikolojik destek veya aile danışmanlığı ihtiyacı tespit edildiğinde:</p>
+                        <ul>
+                            <li><strong>PSİKOLOJİK DANIŞMANLIK MER. (PDM)</strong></li>
+                            <li><strong>İSTANBUL AİLE DANIŞMANLIK MER. (İSADEM)</strong></li>
+                        </ul>
+                    </div>
+                     <div class="box">
+                        <h3 style="color: var(--ibb-dark-blue);"><i class="fa-solid fa-users-line"></i> Bakım Hizmetleri</h3>
+                        <p>Eğitim, engelli veya yaşlı bakım hizmetleri için yönlendirme yapılır:</p>
+                        <ul>
+                            <li><strong>YUVAMIZ İSTANBUL</strong></li>
+                            <li><strong>DARÜLACEZE MÜDÜRLÜĞÜ</strong> (Yaşlı Bakım)</li>
+                            <!-- GÜNCELLENDİ: Maddeler eklendi / düzenlendi -->
+                            <li><strong>ÇOCUK HAKLARI BİRİMİ</strong></li>
+                            <li><strong>KADIN DANIŞMA BİRİMİ</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+                
+        <!-- GÜNCELLENDİ: Slayt 13 (Eski 11) - Yasal Bildirimler düzenlendi -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Aşama 5: Bütüncül Müdahale (Yasal Bildirimler)</h2>
+            <div class="content-area">
+                 <div class="content-grid-3">
+                     <div class="box">
+                        <h3 style="color: var(--text-danger);"><i class="fa-solid fa-child"></i> Yasal Bildirim (Çocuk 5395 SK)</h3>
+                        <p>Eğitim/Sağlık İhmali, Fiziksel Şiddet, Çocuk İşçiliği veya Adölesan Gebelik durumlarında:</p> 
+                         <ul style="margin-top: 1rem;">
+                            <li>CUMHURİYET BAŞSAVCILIĞI</li>
+                            <li>EMNİYET ÇOCUK BÜRO</li>
+                            <li>ASHB / MEB</li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3 style="color: var(--text-danger);"><i class="fa-solid fa-person-dress"></i> Yasal Bildirim (Kadın 6284 SK)</h3>
+                        <p>Aile içi ve kadına yönelik şiddet durumlarında (İBB Kadın Danışma'ya ek olarak):</p> 
+                         <ul style="margin-top: 1rem;">
+                            <li>EMNİYET AİLE İÇİ ŞİDDET BÜROSU</li>
+                            <li>ASHB</li>
+                            <!-- GÜNCELLENDİ: Madde eklendi -->
+                            <li>KADIN KONUK EVİ</li>
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3 style="color: var(--text-danger);"><i class="fa-solid fa-wheelchair"></i> Yasal Bildirim (Yaşlı/Engelli 2828 SK)</h3>
+                        <p>İhmal, istismar veya acil bakım ihtiyacı durumlarında:</p> 
+                         <ul style="margin-top: 1rem;">
+                            <li>ASHB - İLÇE SHM</li>
+                            <li>KAYMAKAMLIK SYDV</li>
+                            <!-- GÜNCELLENDİ: Madde silindi -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 14: Bölüm III Başlık (Eski 12) -->
+        <div class="presentation-slide slide-cover-internal">
+            <h2 class="mudurluk-title">BÖLÜM III</h2>
+            <h1 class="hizmet-title">HİZMETLER</h1>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slayt 15 (Halka Grafik) ve Slayt 16 (Ayni Destekler) SİLİNDİ -->
+        <!-- YERİNE 3 YENİ HİZMET SLAYTI EKLENDİ (15, 16, 17) -->
+
+        <!-- YENİ Slide 15: HİZMETLER 1/3 -->
+        <div class="presentation-slide">
+            <!-- GÜNCELLENDİ: Başlık Değiştirildi -->
+            <h2 class="slide-title">Hizmet Verileri (2019-2025)</h2>
+            <div class="content-area">
+                <div class="content-grid-3"> <!-- GÜNCELLENDİ: 10 kart sığması için 3'lü grid -->
+                    <div class="breakdown-card">
+                        <h3>Sosyal Destek İstanbulkart</h3>
+                        <div class="card-value">7.640.312.597 TL</div>
+                        <div class="card-label">401.871 Hane, 1.500 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Tek Seferlik Nakdi Destek</h3>
+                        <div class="card-value">1.719.314.418 TL</div>
+                        <div class="card-label">513.443 Hane</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Genç Üniversiteli Sosyal Destek</h3>
+                        <div class="card-value">2.946.349.600 TL</div>
+                        <div class="card-label">388.018 Öğrenci/Kez, 20.000 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Sen Oku Diye Eğitim Desteği</h3>
+                        <div class="card-value">478.968.800 TL</div>
+                        <div class="card-label">516.525 Öğrenci/Kez, 3.000 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Evlilik Desteği</h3>
+                        <div class="card-value">278.285.000 TL</div>
+                        <div class="card-label">19.901 Çift, 30.000 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Halk Süt Desteği</h3>
+                        <div class="card-value">45.413.012 Litre</div>
+                        <div class="card-label">330.158 Çocuk</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Okul Beslenme Desteği (2023-2025)</h3>
+                        <div class="card-value">1.645.550 Adet</div>
+                        <div class="card-label">2.000 TL (yeni)</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Yenidoğan Desteği</h3>
+                        <div class="card-value">87.647 Adet</div>
+                        <div class="card-label">87.084 Hane</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Kızlar Okusun Diye Eğitim Desteği</h3>
+                        <div class="card-value">27.780.000 TL</div>
+                        <div class="card-label">9.260 Hane, 3.000 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Öğrenci Ulaşım Desteği</h3>
+                        <div class="card-value">54.026.016 TL</div>
+                        <div class="card-label">22.522 Kişi, 381 TL akbil</div>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- YENİ Slide 16: HİZMETLER 2/3 -->
+        <div class="presentation-slide">
+            <!-- GÜNCELLENDİ: Başlık Değiştirildi -->
+            <h2 class="slide-title">Hizmet Verileri (2019-2025)</h2>
+            <div class="content-area">
+                <div class="content-grid-3"> <!-- GÜNCELLENDİ: 10 kart sığması için 3'lü grid -->
+                    <div class="breakdown-card">
+                        <h3>Gıda Kolisi Desteği</h3>
+                        <div class="card-value">1.268.240 Hane</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Halk Ekmek Desteği</h3>
+                        <div class="card-value">110.382.800 TL</div>
+                        <div class="card-label">86.847 Hane</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Engelli Çocuğu Olan Annelere Destek</h3>
+                        <div class="card-value">53.255.000 TL</div>
+                        <div class="card-label">10.651 Hane, 5.000 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Emekli Pazar Desteği</h3>
+                        <div class="card-value">100.760.000 TL</div>
+                        <div class="card-label">10.076 Hane, 10.000 TL</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Hijyenik Ped Desteği (2023-2025)</h3>
+                        <div class="card-value">638.670 Adet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Göç ve Sosyal Uyum (2021-2025)</h3>
+                        <div class="card-value">86.149 Hizmet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Ev Eşyası ve Giyim Desteği</h3>
+                        <div class="card-value">45.671 Adet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Bebe Bisküvi Desteği</h3>
+                        <div class="card-value">9.353.884 TL</div>
+                        <div class="card-label">60.530 Hane</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Ramazan Pidesi Desteği</h3>
+                        <div class="card-value">9.992.820 TL</div>
+                        <div class="card-label">22.972 Hane</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Kadın Konukevinden Ayrılanlara Destek</h3>
+                        <div class="card-value">5.834.500 TL</div>
+                        <div class="card-label">130 Kişi, 30.000 TL/10.000 TL</div>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- YENİ Slide 17: HİZMETLER 3/3 -->
+        <div class="presentation-slide">
+            <!-- GÜNCELLENDİ: Başlık Değiştirildi -->
+            <h2 class="slide-title">Hizmet Verileri (2019-2025)</h2>
+            <div class="content-area">
+                <div class="content-grid-3"> <!-- GÜNCELLENDİ: 9 kart sığması için 3'lü grid -->
+                    <div class="breakdown-card">
+                        <h3>Gezici Aşevi</h3>
+                        <div class="card-value">2.625.855 Adet</div>
+                        <div class="card-label">359 Lokasyon</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Kurban Bağışı (2020-2025)</h3>
+                        <div class="card-value">791.008 Adet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Askıda Aile Destek Paketi</h3>
+                        <div class="card-value">36.102.450 TL</div>
+                        <div class="card-label">127.306 Adet</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Askıda Eğitim Destek Paketi</h3>
+                        <div class="card-value">35.814.500 TL</div>
+                        <div class="card-label">71.902 Adet</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Askıda Anne Bebek Destek Paketi</h3>
+                        <div class="card-value">26.398.700 TL</div>
+                        <div class="card-label">91.389 Adet</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Kemik Suyu (2020-2025)</h3>
+                        <div class="card-value">95.015 Adet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Sağlıklı Yaş Alma Merkezi (2024-2025)</h3>
+                        <div class="card-value">9.443 Hizmet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>Askıda Emekliye Pazar Desteği (2024-2025)</h3>
+                        <div class="card-value">8.717.000 TL</div>
+                        <div class="card-label">8.717 Adet</div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h3>İşkembe Çorbası (2020-2025)</h3>
+                        <div class="card-value">10.278 Adet</div>
+                        <div class="card-label">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 18: Bölüm IV Başlık (Eski 17) -->
+        <div class="presentation-slide slide-cover-internal">
+            <h2 class="mudurluk-title">BÖLÜM IV</h2>
+            <h1 class="hizmet-title">Bütçe Analizi ve Gelecek</h1>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 19: KODLANMIŞ Çizgi Grafik (Eski 18 - GÜNCELLENDİ) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Daire Başkanlığı Bütçe Gelişim Analizi (2019-2025)</h2>
+            <div class="content-area" style="flex-direction: column;">
+                
+                <!-- KODLANMIŞ ÇİZGİ GRAFİK -->
+                <div class="line-chart-container">
+                    <svg class="line-chart-svg" viewBox="0 0 1000 400">
+                        <!-- Eksenler -->
+                        <line class="chart-axis" x1="60" y1="340" x2="940" y2="340"></line> <!-- X Ekseni -->
+                        <line class="chart-axis" x1="60" y1="40" x2="60" y2="340"></line> <!-- Y Ekseni -->
+
+                        <!-- Kılavuz Çizgiler -->
+                        <line class="chart-grid" x1="60" y1="40" x2="940" y2="40"></line> <!-- Max (18.41 Milyar) -->
+                        <line class="chart-grid" x1="60" y1="190" x2="940" y2="190"></line> <!-- Orta (Yaklaşık 9.2 Milyar) -->
+                        <line class="chart-grid" x1="60" y1="340" x2="940" y2="340"></line> <!-- Min (0) -->
+
+                        <!-- Y Ekseni Etiketleri -->
+                        <text class="chart-label-y" x="55" y="45">18.41 Milyar</text>
+                        <text class="chart-label-y" x="55" y="195">9.2 Milyar</text>
+                        <text class="chart-label-y" x="55" y="345">0</text>
+
+                        <!-- Veri Yolu (Polyline) -->
+                        <!-- X: 60, 207, 353, 500, 647, 793, 940 -->
+                        <!-- Y: 330.6, 326.7, 323.4, 304.6, 277.3, 158.0, 40 -->
+                        <polyline class="chart-line" points="
+                            60, 330.6
+                            207, 326.7
+                            353, 323.4
+                            500, 304.6
+                            647, 277.3
+                            793, 158.0
+                            940, 40
+                        "/>
+
+                        <!-- Veri Noktaları ve Etiketleri -->
+                        <!-- 2019 -->
+                        <circle class="chart-point" cx="60" cy="330.6" r="6"></circle>
+                        <text class="chart-data-label" x="60" y="320" dy="-10">575M</text>
+                        <text class="chart-label-x" x="60" y="370">2019</text>
+
+                        <!-- 2020 -->
+                        <circle class="chart-point" cx="207" cy="326.7" r="6"></circle>
+                        <text class="chart-data-label" x="207" y="316.7" dy="-10">817M</text>
+                        <text class="chart-label-x" x="207" y="370">2020</text>
+
+                        <!-- 2021 -->
+                        <circle class="chart-point" cx="353" cy="323.4" r="6"></circle>
+                        <text class="chart-data-label" x="353" y="313.4" dy="-10">1.02 Milyar</text>
+                        <text class="chart-label-x" x="353" y="370">2021</text>
+
+                        <!-- 2022 -->
+                        <circle class="chart-point" cx="500" cy="304.6" r="6"></circle>
+                        <text class="chart-data-label" x="500" y="294.6" dy="-10">2.17 Milyar</text>
+                        <text class="chart-label-x" x="500" y="370">2022</text>
+
+                        <!-- 2023 -->
+                        <circle class="chart-point" cx="647" cy="277.3" r="6"></circle>
+                        <text class="chart-data-label" x="647" y="267.3" dy="-10">3.85 Milyar</text>
+                        <text class="chart-label-x" x="647" y="370">2023</text>
+
+                        <!-- 2024 -->
+                        <circle class="chart-point" cx="793" cy="158.0" r="6"></circle>
+                        <text class="chart-data-label" x="793" y="148.0" dy="-10">11.15 Milyar</text>
+                        <text class="chart-label-x" x="793" y="370">2024</text>
+
+                        <!-- 2025 -->
+                        <circle class="chart-point" cx="940" cy="40" r="6"></circle>
+                        <text class="chart-data-label" x="940" y="30" dy="-10">18.41 Milyar</text>
+                        <text class="chart-label-x" x="940" y="370">2025</text>
+                    </svg>
+                </div>
+
+                 <p class="chart-summary" style="margin-top: 20px;">
+                    Daire Başkanlığı bütçesi 7 yılda 575 Milyon TL'den 18.4 Milyar TL'ye yükselerek %3102 (31 Kat) artış göstermiştir.
+                </p>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 20: Bütçe Tablosu (Eski 19) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">Müdürlük Bazlı Yıllık Bütçeler (Milyon TL)</h2>
+            <div class="content-area">
+                <div class="table-layout">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Müdürlük Adı</th>
+                                <th>2019</th>
+                                <th>2020</th>
+                                <th>2021</th>
+                                <th>2022</th>
+                                <th>2023</th>
+                                <th>2024</th>
+                                <th>2025</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-left">KADIN VE AİLE HİZMETLERİ</td>
+                                <td>25,90</td>
+                                <td>100,90</td>
+                                <td>96,00</td>
+                                <td>303,30</td>
+                                <td>553,40</td>
+                                <td>689,80</td>
+                                <td>1.116,80</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">ENGELLİ HİZMETLERİ</td>
+                                <td>89,00</td>
+                                <td>97,30</td>
+                                <td>106,90</td>
+                                <td>254,90</td>
+                                <td>353,80</td>
+                                <td>863,90</td>
+                                <td>1.525,40</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">ŞEHİT YAKINLARI VE GAZİLER</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>0,20</td>
+                                <td>16,40</td>
+                                <td>52,80</td>
+                                <td>111,70</td>
+                                <td>124,80</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">ÇOCUK HİZMETLERİ</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>214,70</td>
+                                <td>1.921,20</td>
+                                <td>3.810,40</td>
+                            </tr>
+                            <tr class="highlight-subtotal">
+                                <td class="text-left">SOSYAL HİZMETLER ŞB. MD.</td>
+                                <td>460,00</td>
+                                <td>619,20</td>
+                                <td>822,80</td>
+                                <td>1.601,40</td>
+                                <td>2.681,60</td>
+                                <td>7.569,90</td>
+                                <td>11.826,50</td>
+                            </tr>
+                            <tr class="highlight-total">
+                                <td class="text-left">DAİRE BAŞKANLIĞI TOPLAMI</td>
+                                <td>575,00</td>
+                                <td>817,50</td>
+                                <td>1.025,90</td>
+                                <td>2.176,00</td>
+                                <td>3.856,30</td>
+                                <td>11.156,60</td>
+                                <td>18.413,90</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+        <!-- Slide 21: 2026 Stratejik Hedefler (Eski 20) -->
+        <div class="presentation-slide">
+            <h2 class="slide-title">2026 Stratejik Hizmet Hedefleri (1/2)</h2>
+            <div class="content-area">
+                <div class="table-layout">
+                    <table id="strateji-tablosu-1">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Hizmet Başlığı</th>
+                                <th>2025 Hedef (Kişi)</th>
+                                <th>2025 Birim (TL)</th>
+                                <th>2026 Hedef (Kişi)</th>
+                                <th>2026 Birim (TL)</th>
+                                <th>2026 Toplam Bütçe (TL)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-left">İstanbulKart</td>
+                                <td>200.000 Hane</td>
+                                <td>₺1.500</td>
+                                <td>200.000 Hane</td>
+                                <td>₺2.000</td>
+                                <td>4.800.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Genç Üniversiteli Eğitim Desteği</td>
+                                <td>100.000 Öğrenci</td>
+                                <td>₺15.000</td>
+                                <td>100.000 Öğrenci</td>
+                                <td>₺20.000</td>
+                                <td>2.000.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Sen Oku Diye</td>
+                                <td>100.000 Öğrenci</td>
+                                <td>₺3.000</td>
+                                <td>100.000 Öğrenci</td>
+                                <td>₺4.000</td>
+                                <td>400.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Evlilik Desteği</td>
+                                <td>5.000 Çift</td>
+                                <td>₺30.000</td>
+                                <td>5.000 Çift</td>
+                                <td>₺40.000</td>
+                                <td>200.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Kızlar Okusun Diye</td>
+                                <td>30.031 Öğrenci</td>
+                                <td>₺3.000</td>
+                                <td>30.000 Öğrenci</td>
+                                <td>₺4.000</td>
+                                <td>120.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Engelli Çocuğu Olan Annelere Nakdi Destek</td>
+                                <td>10.000 Kadın</td>
+                                <td>₺5.000</td>
+                                <td>15.000 Kadın</td>
+                                <td>₺6.000</td>
+                                <td>90.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Okul Beslenme Desteği</td>
+                                <td>15.000 Öğrenci</td>
+                                <td>₺2.000</td>
+                                <td>20.000 Öğrenci</td>
+                                <td>₺2.000</td>
+                                <td>480.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Öğrenci Ulaşım Desteği</td>
+                                <td>22.522 Öğrenci</td>
+                                <td>Abonman Bedeli</td>
+                                <td>20.000 Öğrenci</td>
+                                <td>Abonman Bedeli</td>
+                                <td>100.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Halk Süt Desteği</td>
+                                <td>100.000 Çocuk</td>
+                                <td>8-16 litre</td>
+                                <td>100.000 Çocuk</td>
+                                <td>8-16 litre</td>
+                                <td>700.000.000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+        <div class="presentation-slide">
+            <h2 class="slide-title">2026 Stratejik Hizmet Hedefleri (2/2)</h2>
+            <div class="content-area">
+                <div class="table-layout">
+                    <table id="strateji-tablosu-2">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Hizmet Başlığı</th>
+                                <th>2025 Hedef (Kişi)</th>
+                                <th>2025 Birim (TL)</th>
+                                <th>2026 Hedef (Kişi)</th>
+                                <th>2026 Birim (TL)</th>
+                                <th>2026 Toplam Bütçe (TL)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-left">Yenidoğan Paketi Desteği</td>
+                                <td>40.000 Yenidoğan</td>
+                                <td>1 Paket</td>
+                                <td>45.000 Yenidoğan</td>
+                                <td>1 Paket</td>
+                                <td>370.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Kupon Desteği</td>
+                                <td>100.000 Kişi</td>
+                                <td>₺2.000</td>
+                                <td>200.000 Kişi</td>
+                                <td>₺2.000</td>
+                                <td>400.000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="text-left">Emekli Pazar Desteği</td>
+                                <td>20.000 Emekli</td>
+                                <td>₺10.000</td>
+                                <td>20.000 Emekli</td>
+                                <td>₺2.000</td>
+                                <td>480.000.000</td>
+                            </tr>
+                            <tr style="background-color: #fffbeb;">
+                                <td class="text-left">Asgari Ücretli Ulaşım Desteği</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>10.000 Kişi</td>
+                                <td>₺2.000</td>
+                                <td>180.000.000</td>
+                            </tr>
+                            <tr style="background-color: #fffbeb;">
+                                <td class="text-left">Asgari Ücretli Pazar Desteği</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>20.000 Kişi</td>
+                                <td>₺2.000</td>
+                                <td>480.000.000</td>
+                            </tr>
+                            <tr style="background-color: #fffbeb;">
+                                <td class="text-left">Genç Üniversiteli Kıyafet Desteği</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>10.000 Öğrenci</td>
+                                <td>₺5.000</td>
+                                <td>50.000.000</td>
+                            </tr>
+                            <tr style="background-color: #fffbeb;">
+                                <td class="text-left">Ortaöğretim Kıyafet Desteği</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>20.000 Öğrenci</td>
+                                <td>₺2.500</td>
+                                <td>50.000.000</td>
+                            </tr>
+                            <tr style="background-color: #fffbeb;">
+                                <td class="text-left">Ayyıldız Kart Desteği</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>6.000 Kişi</td>
+                                <td>₺5.000</td>
+                                <td>30.000.000</td>
+                            </tr>
+                            <tr style="background-color: #fffbeb;">
+                                <td class="text-left">Hamile Beslenme Desteği</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>20.000 Kişi</td>
+                                <td>₺5.000</td>
+                                <td>100.000.000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+<!-- YENİ EKLENEN SLAYT: Sosyal Hizmetler Şube Müdürlüğü - Başlık -->
+<div class="presentation-slide slide-cover-internal">
+    <h2 class="mudurluk-title">Sosyal Hizmetler Şube Müdürlüğü</h2>
+    <h3 class="hizmet-title">RAMAZAN PLANI</h3>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<!-- YENİ EKLENEN SLAYT: Rutin Ekonomik Destekler -->
+<div class="presentation-slide">
+    <h2 class="slide-title">Rutin Ekonomik Destekler</h2>
+    <div class="content-area">
+        <div class="content-grid-4">
+            <div class="box">
+                <h3>a. Sosyal Destek İstanbulkart</h3>
+                <p>Aylık düzenli desteğimiz olan Sosyal Destek İstanbulkart ile <strong>200.000 haneye 2.000 TL</strong> destek sağlanması planlanmıştır.</p>
+            </div>
+            <div class="box">
+                <h3>b. Okul Beslenme Desteği</h3>
+                <p>5–9 yaş ilkokul öğrencisi bulunan hanelere:</p>
+                <ul>
+                    <li><strong>20.000 öğrenciye 2.000 TL</strong> İstanbulkart</li>
+                    <li>Günlük <strong>1 adet Halk Ekmek</strong></li>
+                </ul>
+            </div>
+            <div class="box">
+                <h3>c. Ekmek Desteği</h3>
+                <p>En düşük gelirli yaklaşık <strong>20.000 haneye</strong> günde <strong>3 adet ekmek</strong> desteği sağlanacaktır.</p>
+            </div>
+             <div class="box">
+                <h3>d. Bisküvi Desteği</h3>
+                <p>6–24 aylık çocuğu bulunan <strong>6.000 haneye</strong> haftada <strong>2 adet bebe bisküvisi</strong> desteği sağlanacaktır.</p>
+            </div>
+            <div class="box">
+                <h3>e. Öğrenci Ulaşım Desteği</h3>
+                <p>Genç Üniversiteli başvurusu onaylanmayan <strong>20.000 öğrenciye</strong> <strong>aylık abonman</strong> desteği sağlanacaktır.</p>
+            </div>
+            <div class="box">
+                <h3>f. Evlilik Desteği</h3>
+                <p>Olumlu sonuçlanan yaklaşık <strong>200 çifte</strong> Ramazan Ayı içerisinde <strong>40.000 TL’lik</strong> Evlilik Desteği sunulacaktır.</p>
+            </div>
+             <div class="box">
+                <h3>g. Emekli Pazar Desteği</h3>
+                <p>60 yaş üstü kriterlere uygun <strong>20.000 emekliye</strong> Ramazan Ayı içerisinde <strong>10.000 TL</strong> destek sağlanacaktır.</p>
+            </div>
+        </div>
+    </div>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<!-- YENİ EKLENEN SLAYT: Ramazan'a Özel Ek Destekler -->
+<div class="presentation-slide">
+    <h2 class="slide-title">Ramazan’a Özel Ek Destekler</h2>
+    <div class="content-area">
+        <div class="content-grid-2">
+            <div class="box">
+                <h3>a. Ramazan Kupon Desteği</h3>
+                <p>Düzenli Sosyal Destek’e başvurmuş olumlu olan ancak destekten faydalanmayan <strong>100.000 haneye 2.000 TL</strong> tutarında kupon desteği sağlanacaktır.</p>
+                <p><strong>Öncelikli gruplar:</strong></p>
+                <ul>
+                    <li>Şiddet mağduru kadınlar</li>
+                    <li>Bakım veren kadınlar</li>
+                    <li>Kronik hastalığı olanlar</li>
+                    <li>Tek yaşayan kadınlar</li>
+                    <li>Ağır engelli yakınına bakanlar</li>
+                </ul>
+            </div>
+            <div class="box">
+                <h3>b. Ramazan Pidesi Desteği</h3>
+                <p>Ramazan Ayında sosyal destek başvuruları olumlu olan yaklaşık <strong>7.000 tek emekli maaşı</strong> ile geçinen ve <strong>tek asgari ücretle</strong> geçinen yaklaşık <strong>16.000 kişi</strong> ile toplamda <strong>23.000 kişiye</strong> Ramazan Ayı boyunca <strong>günlük 1 adet pide</strong> desteği sağlanması planlanmıştır.</p>
+            </div>
+        </div>
+    </div>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<!-- YENİ EKLENEN SLAYT: Çocuk Hizmetleri Şube Müdürlüğü -->
+<div class="presentation-slide slide-cover-internal">
+    <h2 class="mudurluk-title">Çocuk Hizmetleri Şube Müdürlüğü</h2>
+    <h3 class="hizmet-title">RAMAZAN PLANI</h3>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<div class="presentation-slide">
+    <h2 class="slide-title">Yuvamız İstanbul & İBB Çocuk</h2>
+    <div class="content-area">
+        <div class="content-grid-2">
+            <div class="box">
+                <h3>Yuvamız İstanbul</h3>
+                <p>127 merkezde <strong>12.041 çocuğa</strong> ulaşılması hedeflenmektedir. Etkinlikler:</p>
+                <ul>
+                    <li>Gölge Kuklası Yapımı</li>
+                    <li>Paylaşım Kavanozu</li>
+                    <li>Maske Tasarımı</li>
+                    <li>Kitap Tasarımı</li>
+                    <li>Geleneksel Oyunlar</li>
+                    <li>Velilere Kutlama Kartı</li>
+                </ul>
+            </div>
+            <div class="box">
+                <h3>İBB Çocuk</h3>
+                <p>3 atölyede <strong>3.000 katılımcıya</strong> ulaşılması hedeflenmektedir. Atölyeler:</p>
+                <ul>
+                    <li>İyilik Kavanozu Atölyesi</li>
+                    <li>Kukla Yapımı Atölyesi</li>
+                    <li>"Şehirde Ramazan" – Maket ve Resim Atölyesi</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<!-- YENİ EKLENEN SLAYT: Engelli Hizmetleri Şube Müdürlüğü -->
+<div class="presentation-slide slide-cover-internal">
+    <h2 class="mudurluk-title">Engelli Hizmetleri Şube Müdürlüğü</h2>
+    <h3 class="hizmet-title">RAMAZAN PLANI</h3>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<div class="presentation-slide">
+    <h2 class="slide-title">İftar Programları</h2>
+    <div class="content-area">
+        <div class="content-grid-2">
+            <div class="box">
+                <h3>Avrupa Yakası</h3>
+                <p><strong>Tarih:</strong> 26.02.2026</p>
+                <p><strong>Yer:</strong> İBB Avcılar Deniz Köşk Toplantı ve Davet Salonu</p>
+                <p><strong>Katılımcı Sayısı:</strong> 700</p>
+            </div>
+            <div class="box">
+                <h3>Anadolu Yakası</h3>
+                <p><strong>Tarih:</strong> 03.03.2026</p>
+                <p><strong>Yer:</strong> İBB Beykoz Koru Sosyal Tesisleri</p>
+                <p><strong>Katılımcı Sayısı:</strong> 400</p>
+            </div>
+        </div>
+    </div>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<!-- YENİ EKLENEN SLAYT: Kadın ve Aile Hizmetleri Şube Müdürlüğü -->
+<div class="presentation-slide slide-cover-internal">
+    <h2 class="mudurluk-title">Kadın ve Aile Hizmetleri Şube Müdürlüğü</h2>
+    <h3 class="hizmet-title">RAMAZAN PLANI</h3>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<div class="presentation-slide">
+    <h2 class="slide-title">Kadınlara Yönelik Programlar</h2>
+    <div class="content-area">
+        <div class="content-grid-3">
+            <div class="box">
+                <h3>Gezi Hizmeti</h3>
+                <p>Hz. Yuşa Türbesi, Aziz Mahmud Hüdayi Camii ve Türbesi, Eyüp Sultan Camii ve Türbesi gibi manevi mekanlara ziyaretler.</p>
+                <p><strong>Hedef:</strong> 1.350 kişi</p>
+            </div>
+            <div class="box">
+                <h3>Atölye Hizmeti</h3>
+                <p>Sahurluk, iftariyelik ve alternatif sağlıklı tarifler gibi mutfak atölyeleri.</p>
+                <p><strong>Hedef:</strong> 1.920 kişi</p>
+            </div>
+            <div class="box">
+                <h3>Eğitim Hizmeti</h3>
+                <p>Uzman diyetisyenler tarafından Ramazanda Sağlıklı Beslenme Eğitimleri.</p>
+                <p><strong>Hedef:</strong> 2.400 kişi</p>
+            </div>
+        </div>
+    </div>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<!-- YENİ EKLENEN SLAYT: Şehit Yakınları ve Gazilerle İlişkiler Müdürlüğü -->
+<div class="presentation-slide slide-cover-internal">
+    <h2 class="mudurluk-title">Şehit Yakınları ve Gazilerle İlişkiler Müdürlüğü</h2>
+    <h3 class="hizmet-title">RAMAZAN PLANI</h3>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+<div class="presentation-slide">
+    <h2 class="slide-title">Şehit Yakınları ve Gazilere Yönelik Faaliyetler</h2>
+    <div class="content-area">
+        <div class="content-grid-4">
+            <div class="box">
+                <h3>İftar Programı</h3>
+                <p>800 kişilik iftar yemeği programı.</p>
+            </div>
+            <div class="box">
+                <h3>Mevlit Programları</h3>
+                <p>Belirlenen camilerde mevlit programları.</p>
+            </div>
+            <div class="box">
+                <h3>Lokma Dağıtımı</h3>
+                <p>4 ayrı tarihte toplam 20.000 adet lokma dağıtımı.</p>
+            </div>
+            <div class="box">
+                <h3>Günübirlik Gezi Programı</h3>
+                <p>Eyüpsultan Camii ve Beykoz Hz. Yuşa Türbesi’ne 500 kişilik gezi.</p>
+            </div>
+        </div>
+    </div>
+    <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+</div>
+
+        <!-- Slayt SİLİNDİ (Eski 21: Stratejik Çıkarımlar) -->
+        
+        <!-- Slide 22: Kapanış (Eski 22) -->
+        <div class="presentation-slide slide-cover-internal">
+            <div class="qa-layout">
+                <h2>Teşekkürler</h2>
+                
+            </div>
+            <img src="https://i.imgur.com/5i5x7eE.png" alt="İBB Logo" class="slide-logo">
+        </div>
+
+
+        <!-- SLAYT NAVİGASYON ELEMENTLERİ (Gizlendi) -->
+        <div id="slide-navigation">
+            <button id="prev-btn" title="Önceki Slayt"><i class="fa-solid fa-arrow-left"></i></button>
+            <span id="slide-counter">1 / 22</span> <!-- Sayaç güncellendi -->
+            <button id="next-btn" title="Sonraki Slayt"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.presentation-slide');
+            let currentSlideIndex = 0;
+            const totalSlides = slides.length;
+            const slideCounterElement = document.getElementById('slide-counter');
+            const presentationContainer = document.getElementById('presentation-container'); // Moved up for broader scope
+
+            function showSlide(index) {
+                if (index < 0) index = 0;
+                if (index >= totalSlides) index = totalSlides - 1;
+
+                slides[currentSlideIndex].classList.remove('active-slide');
+                slides[index].classList.add('active-slide');
+                slides[index].scrollTop = 0;
+                currentSlideIndex = index;
+
+                if (slideCounterElement) {
+                    slideCounterElement.textContent = `${index + 1} / ${totalSlides}`;
+                }
+            }
+
+            // Klavye Olay Dinleyicileri
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+                    e.preventDefault();
+                    if (currentSlideIndex < totalSlides - 1) showSlide(currentSlideIndex + 1);
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    e.preventDefault();
+                    if (currentSlideIndex > 0) showSlide(currentSlideIndex - 1);
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    showSlide(0);
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    showSlide(totalSlides - 1);
+                } else if (e.key === 'f' || e.key === 'F') {
+                    e.preventDefault();
+                    toggleFullScreen();
+                }
+            });
+
+            showSlide(0);
+
+            // --- Sunum Kontrolleri (Sağ Tık, PDF, Tam Ekran) ---
+            const { jsPDF } = window.jspdf;
+            const contextMenu = document.getElementById('custom-context-menu');
+            const downloadPdfBtn = document.getElementById('context-download-pdf');
+            const fullscreenBtn = document.getElementById('context-fullscreen');
+            const loadingIndicator = document.getElementById('pdf-loading-indicator');
+
+            // Tam Ekran Fonksiyonları (YENİ)
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    // Sunum konteynerini tam ekran yap
+                    presentationContainer.requestFullscreen();
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+
+            function updateFullscreenButton() {
+                fullscreenBtn.textContent = document.fullscreenElement ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap';
+            }
+
+            document.addEventListener('fullscreenchange', updateFullscreenButton);
+            fullscreenBtn.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+                toggleFullScreen();
+            });
+
+            // Sağ Tık Menüsü
+            presentationContainer.addEventListener('contextmenu', e => {
+                if (e.target === presentationContainer || presentationContainer.contains(e.target)) {
+                    e.preventDefault();
+                    updateFullscreenButton();
+                    contextMenu.style.top = `${e.clientY}px`;
+                    contextMenu.style.left = `${e.clientX}px`;
+                    contextMenu.style.display = 'block';
+                }
+            });
+
+            // Menüyü Kapatma
+            document.addEventListener('click', e => {
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.style.display = 'none';
+                }
+            });
+
+            // PDF İndirme
+            downloadPdfBtn.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+                handlePdfDownload();
+            });
+
+            async function handlePdfDownload() {
+                if (slides.length === 0) {
+                    alert("PDF oluşturulacak slayt bulunamadı.");
+                    return;
+                }
+
+                const loadingTextElement = loadingIndicator.querySelector('span');
+                loadingIndicator.style.display = 'block';
+                
+                // FONT SORUNU İÇİN GEÇİCİ DEĞİŞİKLİK
+                const originalFont = document.body.style.fontFamily;
+                document.body.style.fontFamily = 'Arial, sans-serif';
+                
+                const w = presentationContainer.offsetWidth;
+                const h = presentationContainer.offsetHeight;
+                const orientation = w > h ? 'l' : 'p';
+                const pdf = new jsPDF(orientation, 'px', [w, h]);
+                const originalSlideIndex = currentSlideIndex;
+
+                try {
+                    for (let i = 0; i < totalSlides; i++) {
+                        if (loadingTextElement) {
+                            loadingTextElement.textContent = `(Slayt ${i + 1} / ${totalSlides})`;
+                        }
+
+                        showSlide(i);
+                        await new Promise(resolve => setTimeout(resolve, 500)); // Bekleme süresi biraz artırıldı
+
+                        const canvas = await html2canvas(presentationContainer, {
+                            scale: 1, // Kalite ilk haline döndürüldü
+                            useCORS: true,
+                            width: w,
+                            height: h,
+                            windowWidth: w,
+                            windowHeight: h,
+                            x: 0,
+                            y: 0,
+                            onclone: (clonedDoc) => {
+                                // Klonlanan dokümanda da fontu Arial yap
+                                clonedDoc.body.style.fontFamily = 'Arial, sans-serif';
+                                Array.from(clonedDoc.querySelectorAll('svg')).forEach(svg => {
+                                    try {
+                                        const svgRect = svg.getBoundingClientRect();
+                                        svg.setAttribute('width', svgRect.width);
+                                        svg.setAttribute('height', svgRect.height);
+                                        svg.innerHTML = svg.innerHTML;
+                                    } catch (e) {
+                                        console.warn("SVG yeniden çizilirken hata:", e, svg);
+                                    }
+                                });
+                            }
+                        });
+
+                        const imgData = canvas.toDataURL('image/jpeg', 0.9); // Kalite ilk haline döndürüldü
+                        if (i > 0) pdf.addPage([w, h], orientation);
+                        pdf.addImage(imgData, 'JPEG', 0, 0, w, h);
+                    }
+                    pdf.save('İBB_Sunum.pdf'); // Dosya adı ilk haline döndürüldü
+                } catch (err) {
+                    alert('PDF oluşturulurken bir hata oluştu. Lütfen konsolu kontrol edin.');
+                    console.error("PDF Oluşturma Hatası:", err);
+                } finally {
+                    // FONTU GERİ YÜKLE
+                    document.body.style.fontFamily = originalFont;
+                    showSlide(originalSlideIndex);
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+        });
+    </script>
+
+    <!-- YENİ EKLENDİ: PDF Menü ve Yükleyici -->
+    <div id="custom-context-menu">
+        <div class="context-menu-item" id="context-fullscreen">Tam Ekran Yap</div>
+        <div class="context-menu-item" id="context-download-pdf">Sunumu İndir (PDF)</div>
+    </div>
+    <div id="pdf-loading-indicator">
+        PDF oluşturuluyor, lütfen bekleyin...<br>
+        <span style="font-size: 12px; color: var(--text-secondary);">(Slayt 1 / 22)</span>
+    </div>
+
+</body>
+</html>
